@@ -1,6 +1,7 @@
 # MAE, Precision, Recall, F-measure, IoU, Precision-Recall curves
 import numpy as np
 from skimage import io
+import os
 
 import matplotlib.pyplot as plt
 
@@ -51,11 +52,14 @@ def compute_ave_MAE_of_methods(gt_name_list,rs_dir_lists):
         print('-Processed %d/%d'%(i+1,num_gt),end='\r')
         #print("Completed {:2.0%}".format(i / num_gt), end="\r") # print percentile of processed, python 3.0 and newer version
         gt = io.imread(gt_name_list[i]) # read ground truth
-        gt_name = gt_name_list[i].split('/')[-1] # get the file name of the ground truth
+        #gt_name = gt_name_list[i].split('/')[-1] # get the file name of the ground truth
+        rest, fn = os.path.split(gt_name_list[i])
+        _, dataset = os.path.split(rest)
         for j in range(0,num_rs_dir):
             tmp_mae = 0.0
             try:
-                rs = io.imread(rs_dir_lists[j]+gt_name) # read the corresponding mask of each method
+                #rs = io.imread(rs_dir_lists[j]+gt_name) # read the corresponding mask of each method
+                rs = io.imread(os.path.join(rs_dir_lists[j], dataset, fn))
             except IOError:
                 #print('ERROR: Couldn\'t find the following file:',rs_dir_lists[j]+gt_name)
                 continue
@@ -107,7 +111,7 @@ def compute_pre_rec(gt,mask,mybins=np.arange(0,256)):
     return np.reshape(precision,(len(precision))),np.reshape(recall,(len(recall)))
 
 
-def compute_PRE_REC_FM_of_methods(gt_name_list,rs_dir_lists,beta=0.3):
+def compute_PRE_REC_FM_of_methods(gt_name_list,rs_dir_lists,dataset,beta=0.3):
 #input 'gt_name_list': ground truth name list
 #input 'rs_dir_lists': to-be-evaluated mask directories (not the file names, just folder names)
 #output precision 'PRE': numpy array with shape of (num_rs_dir, 256)
@@ -131,25 +135,21 @@ def compute_PRE_REC_FM_of_methods(gt_name_list,rs_dir_lists,beta=0.3):
         print('>>Processed %d/%d'%(i+1,num_gt),end='\r')
         gt = io.imread(gt_name_list[i]) # read ground truth
         gt = mask_normalize(gt)*255.0 # convert gt to [0,255]
-        gt_name = gt_name_list[i].split('/')[-1] # get the file name of the ground truth "xxx.png"
+        gt_name = os.path.basename(gt_name_list[i]) # get the file name of the ground truth "xxx.png"
 
         for j in range(0,num_rs_dir):
             pre, rec, f = np.zeros(len(mybins)), np.zeros(len(mybins)), np.zeros(len(mybins)) # pre, rec, f or one mask w.r.t different thresholds
             try:
-                rs = io.imread(rs_dir_lists[j]+gt_name) # read the corresponding mask from each method
-                rs = mask_normalize(rs)*255.0 # convert rs to [0,255]
-            except IOError:
-                #print('ERROR: Couldn\'t find the following file:',rs_dir_lists[j]+gt_name)
+                rs = io.imread(os.path.join(rs_dir_lists[j], dataset, gt_name)) # read the corresponding mask from each method
+            except:
+                # FIXME 对于缺失的图片直接跳过，不论gt还是rs都不加载，是否合理？
                 continue
-            try:
-                pre, rec = compute_pre_rec(gt,rs,mybins=np.arange(0,256))
-            except IOError:
-                #print('ERROR: Fails in compute_mae!')
-                continue
-
+            rs = mask_normalize(rs)*255.0 # convert rs to [0,255]
+            pre, rec = compute_pre_rec(gt,rs,mybins=np.arange(0,256))
             PRE[i,j,:] = pre
             REC[i,j,:] = rec
             gt2rs[i,j] = 1.0
+
     print('\n')
     gt2rs = np.sum(gt2rs,0) # num_rs_dir
     gt2rs = np.repeat(gt2rs[:, np.newaxis], 255, axis=1) #num_rs_dirx255
@@ -167,7 +167,10 @@ def plot_save_pr_curves(PRE, REC, method_names, lineSylClr, linewidth, xrange=(0
     num = PRE.shape[0]
     for i in range(0,num):
         if (len(np.array(PRE[i]).shape)!=0):
-            plt.plot(REC[i], PRE[i],lineSylClr[i],linewidth=linewidth[i],label=method_names[i])
+            if type(lineSylClr[i]) == tuple or lineSylClr[i] == 'solid':
+                plt.plot(REC[i], PRE[i],ls=lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
+            else:
+                plt.plot(REC[i], PRE[i],lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
 
     plt.xlim(xrange[0],xrange[1])
     plt.ylim(yrange[0],yrange[1])
@@ -194,8 +197,9 @@ def plot_save_pr_curves(PRE, REC, method_names, lineSylClr, linewidth, xrange=(0
     order = [len(handles)-x for x in range(1,len(handles)+1)]
     plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],loc='lower left', prop=font1)
     plt.grid(linestyle='--')
-    fig1.savefig(save_dir+dataset_name+"_pr_curves."+save_fmt,bbox_inches='tight',dpi=300)
-    print('>>PR-curves saved: %s'%(save_dir+dataset_name+"_pr_curves."+save_fmt))
+    fig1.savefig(os.path.join(save_dir,dataset_name+"_pr_curves."+save_fmt),bbox_inches='tight',dpi=300)
+    print('>>PR-curves saved: %s'%(os.path.join(save_dir,dataset_name+"_pr_curves."+save_fmt)))
+    plt.close()
 
 
 def plot_save_fm_curves(FM, mybins, method_names, lineSylClr, linewidth, xrange=(0.0,1.0), yrange=(0.0,1.0), dataset_name = 'TEST', save_dir = './', save_fmt = 'pdf'):
@@ -204,7 +208,10 @@ def plot_save_fm_curves(FM, mybins, method_names, lineSylClr, linewidth, xrange=
     num = FM.shape[0]
     for i in range(0,num):
         if (len(np.array(FM[i]).shape)!=0):
-            plt.plot(np.array(mybins[0:-1]).astype(np.float)/255.0, FM[i],lineSylClr[i],linewidth=linewidth[i],label=method_names[i])
+            if type(lineSylClr[i]) == tuple or lineSylClr[i] == 'solid':
+                plt.plot(np.array(mybins[0:-1]).astype(np.float)/255.0, FM[i],ls=lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
+            else:
+                plt.plot(np.array(mybins[0:-1]).astype(np.float)/255.0, FM[i],lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
 
     plt.xlim(xrange[0],xrange[1])
     plt.ylim(yrange[0],yrange[1])
@@ -231,5 +238,6 @@ def plot_save_fm_curves(FM, mybins, method_names, lineSylClr, linewidth, xrange=
     order = [len(handles)-x for x in range(1,len(handles)+1)]
     plt.legend([handles[idx] for idx in order], [labels[idx] for idx in order],loc='lower left', prop=font1)
     plt.grid(linestyle='--')
-    fig2.savefig(save_dir+dataset_name+"_fm_curves."+save_fmt,bbox_inches='tight',dpi=300)
-    print('>>F-measure curves saved: %s'%(save_dir+dataset_name+"_fm_curves."+save_fmt))
+    fig2.savefig(os.path.join(save_dir,dataset_name+"_fm_curves."+save_fmt),bbox_inches='tight',dpi=300)
+    print('>>F-measure curves saved: %s'%(os.path.join(save_dir,dataset_name+"_fm_curves."+save_fmt)))
+    plt.close()
