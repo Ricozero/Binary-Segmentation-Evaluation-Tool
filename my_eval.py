@@ -4,7 +4,12 @@ import os
 from measures import compute_ave_MAE_of_methods, compute_PRE_REC_FM_of_methods, plot_save_pr_curves, plot_save_fm_curves
 
 mode = 'calculation'
-#mode = 'plot'
+mode = 'plot'
+
+pr_xrange = (0.5, 1.0)
+pr_yrange = (0.5, 1.0)
+fm_xrange = (0.0, 1.0)
+fm_yrange = (0.5, 1.0)
 
 # My paper
 # gt_dir = '../Saliency Maps/GT'
@@ -45,7 +50,7 @@ mode = 'calculation'
 # lineSylClr = ['b-', 'b--', 'g-', 'g--', 'c-', 'c--', 'm-', 'm--', 'y-', 'y--', 'k-', 'k--', 'r--', 'r-']
 # linewidth = [1]*(len(methods)-1)+[1.5]
 
-# Ja Ning's paper 2
+# Ja Ning's paper 2 (Normal and Fusion)
 # gt_dir = '../Saliency Maps/GT'
 # sm_dir = '../Saliency Maps/JN2-Fusion'
 # #sm_dir = '../Saliency Maps/JN2'
@@ -57,43 +62,58 @@ mode = 'calculation'
 # lineSylClr = ['r-', 'b-', 'b--', 'g-', 'g--', 'c-', 'c--', 'm-', 'm--', 'y-', 'y--', 'k-', 'k--']
 # linewidth = [1.5] + [1]*(len(methods)-1)
 
-# Ja Ning's paper 2 (New)
+# Ja Ning's paper 2 (New and New2)
 # gt_dir = '../Saliency Maps/GT'
-# sm_dir = '../Saliency Maps/JN2-New'
+# #sm_dir = '../Saliency Maps/JN2-New'
+# sm_dir = '../Saliency Maps/JN2-New2'
 # datasets = ['PASCAL-S', 'HKU-IS', 'ECSSD', 'DUT-OMRON', 'DUTS-TE', 'SOD']
 # save_dir = 'sal_eval'
 # methods = os.listdir(sm_dir)
 # methods.remove('Ours')
 # methods.insert(0, 'Ours')
-# lineSylClr = ['r-', 'b-', 'b--', 'g-', 'g--', 'c-', 'c--', 'm-', 'm--', 'y-', 'y--', 'k-', 'k--']
+# lineSylClr = ['r-', 'b-', 'b--', 'g-', 'g--', 'c-', 'c--', 'm-', 'm--', 'y-', 'y--', 'k-', 'k--', 'r--']
 # linewidth = [1.5] + [1]*(len(methods)-1)
 
 # Ja Ning's paper 2 (for graduation essay)
+# gt_dir = '../Saliency Maps/GT'
+# #sm_dir = '../Saliency Maps/JN2-Fusion'
+# sm_dir = '../Saliency Maps/JN2'
+# datasets = ['PASCAL-S', 'HKU-IS', 'ECSSD', 'DUT-OMRON', 'DUTS-TE', 'SOD']
+# save_dir = 'sal_eval'
+# methods = os.listdir(sm_dir)
+# methods.remove('Ours')
+# methods.insert(0, 'Ours')
+# lineSylClr = [
+#     'solid',
+#     (0, (1, 1)),                # . .
+#     (0, (1, 3)),                # .  .
+#     (0, (2, 1)),                # - -
+#     (0, (2, 3)),                # -  -
+#     (0, (5, 1)),                # -- --
+#     (0, (10, 1)),               # --- ---
+#     (0, (1, 1, 2, 1)),          # . -
+#     (0, (1, 1, 5, 1)),          # . --
+#     (0, (1, 1, 10, 1)),         # . ---
+#     (0, (1, 1, 1, 1, 2, 1)),    # . . -
+#     (0, (1, 1, 1, 1, 5, 1)),    # . . --
+#     (0, (1, 1, 2, 1, 2, 1)),    # . - -
+#     (0, (1, 1, 2, 1, 5, 1)),    # . - --
+# ]
+# linewidth = [1.5]+[1]*(len(methods)-1)
+
+# Ja Ning's paper 2 (Traffic)
 gt_dir = '../Saliency Maps/GT'
-#sm_dir = '../Saliency Maps/JN2-Fusion'
-sm_dir = '../Saliency Maps/JN2'
-datasets = ['PASCAL-S', 'HKU-IS', 'ECSSD', 'DUT-OMRON', 'DUTS-TE', 'SOD']
+sm_dir = '../Saliency Maps/Traffic'
+datasets = ['Traffic-TE']
 save_dir = 'sal_eval'
 methods = os.listdir(sm_dir)
 methods.remove('Ours')
 methods.insert(0, 'Ours')
-lineSylClr = [
-    'solid',
-    (0, (1, 1)),                # . .
-    (0, (1, 3)),                # .  .
-    (0, (2, 1)),                # - -
-    (0, (2, 3)),                # -  -
-    (0, (5, 1)),                # -- --
-    (0, (10, 1)),               # --- ---
-    (0, (1, 1, 2, 1)),          # . -
-    (0, (1, 1, 5, 1)),          # . --
-    (0, (1, 1, 10, 1)),         # . ---
-    (0, (1, 1, 1, 1, 2, 1)),    # . . -
-    (0, (1, 1, 1, 1, 5, 1)),    # . . --
-    (0, (1, 1, 2, 1, 2, 1)),    # . - -
-    (0, (1, 1, 2, 1, 5, 1)),    # . - --
-]
-linewidth = [1.5]+[1]*(len(methods)-1)
+lineSylClr = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-']
+linewidth = [1.5] + [1]*(len(methods)-1)
+pr_xrange = (0.0, 1.0)
+pr_yrange = (0.0, 0.7)
+fm_yrange = (0.0, 0.7)
 
 ############################## Processing ##############################
 
@@ -145,8 +165,8 @@ for dataset in datasets:
                         method_names = sm_dir_list, # method names, shape (num_rs_dir), will be included in the figure legend
                         lineSylClr = lineSylClr, # curve styles, shape (num_rs_dir)
                         linewidth = linewidth, # curve width, shape (num_rs_dir)
-                        xrange = (0.5,1.0), # the showing range of x-axis
-                        yrange = (0.5,1.0), # the showing range of y-axis
+                        xrange = pr_xrange, # the showing range of x-axis
+                        yrange = pr_yrange, # the showing range of y-axis
                         dataset_name = dataset, # dataset name will be drawn on the bottom center position
                         save_dir = save_dir, # figure save directory
                         save_fmt = 'png') # format of the to-be-saved figure
@@ -159,8 +179,8 @@ for dataset in datasets:
                         method_names = sm_dir_list, # method names, shape (num_rs_dir), will be included in the figure legend
                         lineSylClr = lineSylClr, # curve styles, shape (num_rs_dir)
                         linewidth = linewidth, # curve width, shape (num_rs_dir)
-                        xrange = (0.0,1.0), # the showing range of x-axis
-                        yrange = (0.5,1.0), # the showing range of y-axis
+                        xrange = fm_xrange, # the showing range of x-axis
+                        yrange = fm_yrange, # the showing range of y-axis
                         dataset_name = dataset, # dataset name will be drawn on the bottom center position
                         save_dir = save_dir, # figure save directory
                         save_fmt = 'png') # format of the to-be-saved figure
