@@ -1,10 +1,8 @@
-# demo
 import numpy as np
 import os
 from measures import compute_ave_MAE_of_methods, compute_PRE_REC_FM_of_methods, plot_save_pr_curves, plot_save_fm_curves
 
-mode = 'calculation'
-mode = 'plot'
+overwrite_save = False
 
 pr_xrange = (0.5, 1.0)
 pr_yrange = (0.5, 1.0)
@@ -12,32 +10,32 @@ fm_xrange = (0.0, 1.0)
 fm_yrange = (0.5, 1.0)
 
 # My paper
-# gt_dir = '../Saliency Maps/GT'
-# sm_dir = '../Saliency Maps/Main'
-# save_dir = 'sal_eval'
-# methods = os.listdir(sm_dir)
-# methods.remove('Ours')
-# methods.insert(0, 'Ours')
-# datasets = ['HKU-IS', 'ECSSD', 'DUTS-TE', 'DUT-OMRON', 'PASCAL-S', 'SOD']
-# #lineSylClr = ['r-', 'r--', 'b-', 'b--', 'g-', 'g--', 'c-', 'c--', 'm-', 'm--', 'y-', 'y--', 'k-', 'k--']
-# # For gray evaluation curve image
-# lineSylClr = [
-#     'solid',
-#     (0, (1, 1)),                # . .
-#     (0, (1, 3)),                # .  .
-#     (0, (2, 1)),                # - -
-#     (0, (2, 3)),                # -  -
-#     (0, (5, 1)),                # -- --
-#     (0, (10, 1)),               # --- ---
-#     (0, (1, 1, 2, 1)),          # . -
-#     (0, (1, 1, 5, 1)),          # . --
-#     (0, (1, 1, 10, 1)),         # . ---
-#     (0, (1, 1, 1, 1, 2, 1)),    # . . -
-#     (0, (1, 1, 1, 1, 5, 1)),    # . . --
-#     (0, (1, 1, 2, 1, 2, 1)),    # . - -
-#     (0, (1, 1, 2, 1, 5, 1)),    # . - --
-# ]
-# linewidth = [1.5]+[1]*(len(methods)-1)
+gt_dir = '../Data'
+sm_dir = '../EvalMaps'
+save_dir = 'sal_eval'
+methods = os.listdir(sm_dir)
+methods.remove('Ours')
+methods.insert(0, 'Ours')
+datasets = ['HKU-IS', 'ECSSD', 'DUTS-TE', 'DUT-OMRON', 'PASCAL-S', 'SOD']
+#lineSylClr = ['r-', 'r--', 'b-', 'b--', 'g-', 'g--', 'c-', 'c--', 'm-', 'm--', 'y-', 'y--', 'k-', 'k--']
+# For gray evaluation curve image
+lineSylClr = [
+    'solid',
+    (0, (1, 1)),                # . .
+    (0, (1, 3)),                # .  .
+    (0, (2, 1)),                # - -
+    (0, (2, 3)),                # -  -
+    (0, (5, 1)),                # -- --
+    (0, (10, 1)),               # --- ---
+    (0, (1, 1, 2, 1)),          # . -
+    (0, (1, 1, 5, 1)),          # . --
+    (0, (1, 1, 10, 1)),         # . ---
+    (0, (1, 1, 1, 1, 2, 1)),    # . . -
+    (0, (1, 1, 1, 1, 5, 1)),    # . . --
+    (0, (1, 1, 2, 1, 2, 1)),    # . - -
+    (0, (1, 1, 2, 1, 5, 1)),    # . - --
+]
+linewidth = [1.5]+[1]*(len(methods)-1)
 
 # Ja Ning's paper
 # gt_dir = 'JN/GT'
@@ -102,18 +100,18 @@ fm_yrange = (0.5, 1.0)
 # linewidth = [1.5]+[1]*(len(methods)-1)
 
 # Ja Ning's paper 2 (Traffic)
-gt_dir = '../Saliency Maps/GT'
-sm_dir = '../Saliency Maps/Traffic'
-datasets = ['Traffic-TE']
-save_dir = 'sal_eval'
-methods = os.listdir(sm_dir)
-methods.remove('Ours')
-methods.insert(0, 'Ours')
-lineSylClr = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-']
-linewidth = [1.5] + [1]*(len(methods)-1)
-pr_xrange = (0.0, 1.0)
-pr_yrange = (0.0, 0.7)
-fm_yrange = (0.0, 0.7)
+# gt_dir = '../Saliency Maps/GT'
+# sm_dir = '../Saliency Maps/Traffic'
+# datasets = ['Traffic-TE']
+# save_dir = 'sal_eval'
+# methods = os.listdir(sm_dir)
+# methods.remove('Ours')
+# methods.insert(0, 'Ours')
+# lineSylClr = ['r-', 'b-', 'g-', 'c-', 'm-', 'y-', 'k-']
+# linewidth = [1.5] + [1]*(len(methods)-1)
+# pr_xrange = (0.0, 1.0)
+# pr_yrange = (0.0, 0.7)
+# fm_yrange = (0.0, 0.7)
 
 ############################## Processing ##############################
 
@@ -130,7 +128,18 @@ for dataset in datasets:
             methods_tmp.remove(method)
     sm_dir_list = [os.path.join(sm_dir, method) for method in methods_tmp]
 
-    if mode == 'calculation':
+    PRE = None
+    REC = None
+    FM = None
+    if not overwrite_save \
+        and os.path.exists(os.path.join('saves', dataset + '_PRE.npy')) \
+        and os.path.exists(os.path.join('saves', dataset + '_REC.npy')) \
+        and os.path.exists(os.path.join('saves', dataset + '_FM.npy')):
+        PRE = np.load(os.path.join('saves', dataset + '_PRE.npy'))
+        REC = np.load(os.path.join('saves', dataset + '_REC.npy'))
+        FM = np.load(os.path.join('saves', dataset + '_FM.npy'))
+
+    if PRE is None and REC is None and FM is None:
         # print("------Compute the average MAE of Methods------")
         # aveMAE, gt2rs_mae = compute_ave_MAE_of_methods(gt_img_list,sm_dir_list)
         # for i in range(0,len(sm_dir_list)):
@@ -153,10 +162,6 @@ for dataset in datasets:
         #     for i in range(0,FM.shape[0]):
         #         f.write('%s\t%.3f %.3f %.3f\n' % (os.path.basename(sm_dir_list[i]), aveMAE[i], np.max(FM,1)[i], np.mean(FM,1)[i]))
         #     f.write('\n')
-    elif mode == 'plot':
-        PRE = np.load(os.path.join('saves', dataset + '_PRE.npy'))
-        REC = np.load(os.path.join('saves', dataset + '_REC.npy'))
-        FM = np.load(os.path.join('saves', dataset + '_FM.npy'))
 
     ## =======Plot and save precision-recall curves=========
     print("------Plot and save precision-recall curves------")
@@ -169,7 +174,7 @@ for dataset in datasets:
                         yrange = pr_yrange, # the showing range of y-axis
                         dataset_name = dataset, # dataset name will be drawn on the bottom center position
                         save_dir = save_dir, # figure save directory
-                        save_fmt = 'png') # format of the to-be-saved figure
+                        save_fmt = 'pdf') # format of the to-be-saved figure
     print('\n')
 
     ## =======Plot and save F-measure curves=========
@@ -183,7 +188,7 @@ for dataset in datasets:
                         yrange = fm_yrange, # the showing range of y-axis
                         dataset_name = dataset, # dataset name will be drawn on the bottom center position
                         save_dir = save_dir, # figure save directory
-                        save_fmt = 'png') # format of the to-be-saved figure
+                        save_fmt = 'pdf') # format of the to-be-saved figure
     print('\n')
 
 print('Done!!!')

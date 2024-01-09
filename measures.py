@@ -209,9 +209,9 @@ def plot_save_fm_curves(FM, mybins, method_names, lineSylClr, linewidth, xrange=
     for i in range(0,num):
         if (len(np.array(FM[i]).shape)!=0):
             if type(lineSylClr[i]) == tuple or lineSylClr[i] == 'solid':
-                plt.plot(np.array(mybins[0:-1]).astype(np.float)/255.0, FM[i],ls=lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
+                plt.plot(np.array(mybins[0:-1]).astype(float)/255.0, FM[i],ls=lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
             else:
-                plt.plot(np.array(mybins[0:-1]).astype(np.float)/255.0, FM[i],lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
+                plt.plot(np.array(mybins[0:-1]).astype(float)/255.0, FM[i],lineSylClr[i],linewidth=linewidth[i],label=os.path.basename(method_names[i]))
 
     plt.xlim(xrange[0],xrange[1])
     plt.ylim(yrange[0],yrange[1])
